@@ -24,7 +24,7 @@ return new class extends Migration {
         DB::table('users')->truncate(); // Elimina todos los registros de la tabla
 
         // Insertar nuevo usuario (admin)
-        DB::connection('mysql')->table('users')->insert([
+        DB::table('users')->insert([
             [
                 'name' => 'Kevin Pinillos',
                 'tipo_usuario' => 1,
@@ -51,7 +51,7 @@ return new class extends Migration {
         });
 
         // Insertar un área por defecto
-        DB::connection('mysql')->table('areas')->insert([
+        DB::table('areas')->insert([
             [
                 'nombre' => 'ADMINISTRACION',
                 'id_user' => 1,
