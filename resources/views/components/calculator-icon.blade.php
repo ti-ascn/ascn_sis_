@@ -1,0 +1,19 @@
+<svg version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    viewBox="0 0 32 32" xml:space="preserve" width="30" height="30" viewBox="0 0 1024 1024" class="icon" fill="currentColor">
+    <style type="text/css">
+        .st0 {
+            stroke: #000000;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-miterlimit: 10;
+        }
+    </style>
+    <path class="st0" d="M24,30H8c-1.1,0-2-0.9-2-2V5c0-1.1,0.9-2,2-2h16c1.1,0,2,0.9,2,2v23C26,29.1,25.1,30,24,30z" />
+    <rect x="10" y="7" class="st0" width="12" height="4" />
+    <rect x="10" y="14" class="st0" width="12" height="12" />
+    <line class="st0" x1="10" y1="18" x2="22" y2="18" />
+    <line class="st0" x1="14" y1="26" x2="14" y2="14" />
+    <line class="st0" x1="18" y1="26" x2="18" y2="14" />
+    <line class="st0" x1="10" y1="22" x2="22" y2="22" />
+</svg>
