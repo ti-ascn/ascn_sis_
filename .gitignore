@@ -30,6 +30,7 @@ yarn-error.log
 # finisaac
 /public/aumentos_capital
 /public/archivos_contratos
+/public/deudas_recursos
 /public/gerentes
 /public/legal_archivos
 /public/archivos_libros
