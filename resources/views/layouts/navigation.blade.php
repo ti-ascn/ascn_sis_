@@ -161,7 +161,7 @@
         @endif
 
         <!-- AUDITORIA -->
-        @if ($area == 'AUDITORIA' || $area == 'ADMINISTRACION')
+        <!-- @if ($area == 'AUDITORIA' || $area == 'ADMINISTRACION')
             @if ($tipo == 2 || $tipo == 3 || $area == 'ADMINISTRACION')
                 <div>
                     <h3
@@ -193,9 +193,9 @@
                                 <a href="{{ route('direcciones.index') }}"
                                     class="block px-4 py-2 text-sm {{ request()->routeIs('direcciones.index') ? 'text-amber-600 font-bold' : 'text-gray-500 hover:text-amber-600' }}">Direcciones</a>
                                 <a href="{{ route('choferes.index') }}"
-                                     class="block px-4 py-2 text-sm {{ request()->routeIs('choferes.index') || request()->routeIs('choferes.*') ? 'text-amber-600 font-bold' : 'text-gray-500 hover:text-amber-600' }}">Choferes</a>
-                                 <a href="{{ route('programacion.editar') }}"
-                                     class="block px-4 py-2 text-sm {{ request()->routeIs('programacion.editar') ? 'text-amber-600 font-bold' : 'text-gray-500 hover:text-amber-600' }}">Control Transporte</a>
+                                    class="block px-4 py-2 text-sm {{ request()->routeIs('choferes.index') || request()->routeIs('choferes.*') ? 'text-amber-600 font-bold' : 'text-gray-500 hover:text-amber-600' }}">Choferes</a>
+                                <a href="{{ route('programacion.editar') }}"
+                                    class="block px-4 py-2 text-sm {{ request()->routeIs('programacion.editar') ? 'text-amber-600 font-bold' : 'text-gray-500 hover:text-amber-600' }}">Control Transporte</a>
                             @endif
                         </x-nav-accordion-sidebar>
 
@@ -246,7 +246,7 @@
                     </div>
                 </div>
             @endif
-        @endif
+        @endif-->
 
         <!-- RECEPCION -->
         @if ($area == 'RECEPCION' || $area == 'ADMINISTRACION' || $area == 'GERENCIA')
