@@ -88,6 +88,8 @@
                         <div class="border rounded-lg p-4 bg-gray-50 mt-6">
                             <h3 class="font-semibold mb-3 text-blue-600">Póliza Vida Ley</h3>
 
+                            <input type="hidden" name="id_poliza_vida" value="{{ $poliza->vida->id_poliza_vida }}">
+
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <x-input-label :value="__('Aseguradora')" />
@@ -161,6 +163,7 @@
                     {{-- ========================= --}}
                     @if ($poliza->sctr && (!$tipo || $tipo === 'sctr'))
                         <div class="border rounded-lg p-4 bg-gray-50 mt-6">
+                            <input type="hidden" name="id_poliza_sctr" value="{{ $poliza->sctr->id_poliza_sctr }}">
                             <h3 class="font-semibold mb-3 text-green-600">Póliza SCTR</h3>
 
                             <div class="grid grid-cols-2 gap-4">

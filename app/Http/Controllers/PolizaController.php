@@ -92,7 +92,10 @@ class PolizaController extends Controller
 
         // Crear VIDA
         if (in_array('vida', $tipos)) {
-            $vida = PolizaVida::create([
+            // Evita duplicados si el formulario se envía más de una vez.
+            $vida = PolizaVida::firstOrCreate([
+                'id_poliza' => $poliza->id_poliza,
+            ], [
                 'id_poliza' => $poliza->id_poliza,
                 'aseguradora' => $request->vida_aseguradora,
                 'broker' => $request->vida_broker,
@@ -104,18 +107,23 @@ class PolizaController extends Controller
                 'id_usuario' => $usuario,
             ]);
 
-            HistorialPoliza::create([
-                'id_poliza' => $poliza->id_poliza,
-                'tipo_poliza' => 'VIDA',
-                'cambio' => 'CREACION',
-                'detalle' => 'Póliza Vida registrada',
-                'usuario_responsable' => $usuario,
-            ]);
+            if ($vida->wasRecentlyCreated) {
+                HistorialPoliza::create([
+                    'id_poliza' => $poliza->id_poliza,
+                    'tipo_poliza' => 'VIDA',
+                    'cambio' => 'CREACION',
+                    'detalle' => 'Póliza Vida registrada',
+                    'usuario_responsable' => $usuario,
+                ]);
+            }
         }
 
         // Crear SCTR
         if (in_array('sctr', $tipos)) {
-            $sctr = PolizaSctr::create([
+            // Evita duplicados si el formulario se envía más de una vez.
+            $sctr = PolizaSctr::firstOrCreate([
+                'id_poliza' => $poliza->id_poliza,
+            ], [
                 'id_poliza' => $poliza->id_poliza,
                 'aseguradora' => $request->sctr_aseguradora,
                 'broker' => $request->sctr_broker,
@@ -126,13 +134,15 @@ class PolizaController extends Controller
                 'id_usuario' => $usuario,
             ]);
 
-            HistorialPoliza::create([
-                'id_poliza' => $poliza->id_poliza,
-                'tipo_poliza' => 'SCTR',
-                'cambio' => 'CREACION',
+            if ($sctr->wasRecentlyCreated) {
+                HistorialPoliza::create([
+                    'id_poliza' => $poliza->id_poliza,
+                    'tipo_poliza' => 'SCTR',
+                    'cambio' => 'CREACION',
                 'detalle' => 'Póliza SCTR registrada',
                 'usuario_responsable' => $usuario,
-            ]);
+                ]);
+            }
         }
 
         return redirect()->route('polizas.index')->with('success', 'Póliza registrada correctamente.');
@@ -157,6 +167,8 @@ class PolizaController extends Controller
             'id_empresa_cliente' => 'required|exists:empresas_clientes,id_empresas_clientes',
             'broker' => 'nullable|string|max:100',
             'estado_general' => 'required|in:0,1',
+            'id_poliza_vida' => 'required_if:tipo,vida|nullable|integer',
+            'id_poliza_sctr' => 'required_if:tipo,sctr|nullable|integer',
         ]);
 
         // =========================
@@ -172,8 +184,10 @@ class PolizaController extends Controller
         // =========================
         // VIDA LEY
         // =========================
-        if ($tipo === 'vida' && $poliza->vida) {
-            $vida = $poliza->vida;
+        if ($tipo === 'vida') {
+            // La edición siempre actualiza el registro de Vida que abrió el formulario.
+            $vida = PolizaVida::where('id_poliza', $poliza->id_poliza)
+                ->findOrFail($request->id_poliza_vida);
 
             // Valores anteriores
             $anterior = [
@@ -232,8 +246,10 @@ class PolizaController extends Controller
         // =========================
         // SCTR
         // =========================
-        if ($tipo === 'sctr' && $poliza->sctr) {
-            $sctr = $poliza->sctr;
+        if ($tipo === 'sctr') {
+            // La edición siempre actualiza el registro SCTR que abrió el formulario.
+            $sctr = PolizaSctr::where('id_poliza', $poliza->id_poliza)
+                ->findOrFail($request->id_poliza_sctr);
 
             // Valores anteriores
             $anterior = [
@@ -402,4 +418,3 @@ class PolizaController extends Controller
     }
 
 }
-
