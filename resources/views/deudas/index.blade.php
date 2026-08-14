@@ -86,7 +86,8 @@
                     @if ($tipo === 'recursos' || $tipo === 'contabilidad')
                         <button type="button" onclick="toggleModal('modal-buscar-deudas-{{ $tipo }}')"
                             class="bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300 text-white shadow-md">
-                            <i class="bi bi-search"></i> Buscar Deudas ({{ $tipo === 'recursos' ? 'Recursos' : 'Contabilidad' }})
+                            <i class="bi bi-search"></i> Buscar Deudas
+                            ({{ $tipo === 'recursos' ? 'Recursos' : 'Contabilidad' }})
                         </button>
                     @endif
                 </div>
@@ -97,7 +98,8 @@
                     <thead>
                         <tr class="bg-gray-50 text-left text-gray-700">
                             <th class="px-3 py-2 border-b">UD</th>
-                            <th class="px-3 py-2 border-b">{{ $tipo === 'recursos' ? 'ESTADO RECURSOS' : 'ESTADO' }}</th>
+                            <th class="px-3 py-2 border-b">{{ $tipo === 'recursos' ? 'ESTADO RECURSOS' : 'ESTADO' }}
+                            </th>
                             <th class="px-3 py-2 border-b">RAZÓN SOCIAL</th>
                             <th class="px-3 py-2 border-b">RUC</th>
                             <th class="px-3 py-2 border-b">VENCIMIENTO (PDT)</th>
@@ -139,10 +141,17 @@
                                     @php
                                         $c = $f['meses'][$m];
                                         $hasDeuda = $c['estado'] !== '—';
-                                        $cellClasses = $hasDeuda ? 'text-gray-800' : 'text-gray-400';                                    
-                                        $monto = $hasDeuda ? 'S/. ' . number_format($c['total'], 0, '.', ',') : $mesLabel($m);
+                                        $cellClasses = $hasDeuda ? 'text-gray-800' : 'text-gray-400';
+                                        $monto = $hasDeuda
+                                            ? 'S/. ' . number_format($c['total'], 0, '.', ',')
+                                            : $mesLabel($m);
                                         $estado = $hasDeuda ? ($c['total'] == 0 ? 'Sin movimiento' : $c['estado']) : '';
-                                        $estadoColor = $c['estado'] === 'Pendiente' ? 'text-red-600' : 'text-gray-500';
+                                        $estadoColor =
+                                            $c['estado'] === 'Pendiente'
+                                                ? 'text-red-600'
+                                                : ($c['estado'] === 'Pagado'
+                                                    ? 'text-emerald-600'
+                                                    : 'text-gray-500');
                                         $exportText = $hasDeuda ? trim($monto . ' (' . $estado . ')') : $mesLabel($m);
                                     @endphp
 
@@ -351,13 +360,15 @@
 
 @if ($tipo === 'recursos' || $tipo === 'contabilidad')
     {{-- Modal: Buscar Deudas --}}
-    <x-modal-show id="modal-buscar-deudas-{{ $tipo }}" title="Buscar Deudas de {{ $tipo === 'recursos' ? 'Recursos' : 'Contabilidad' }}" size="full">
+    <x-modal-show id="modal-buscar-deudas-{{ $tipo }}"
+        title="Buscar Deudas de {{ $tipo === 'recursos' ? 'Recursos' : 'Contabilidad' }}" size="full">
         <div class="space-y-6">
             <!-- Filtros -->
             <div class="grid md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div>
                     <x-input-label :value="__('Empresa')" />
-                    <select id="search_id_empresa" class="select-empresa mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                    <select id="search_id_empresa"
+                        class="select-empresa mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
                         <option value="">Todas las empresas</option>
                         @foreach ($filas as $f)
                             <option value="{{ $f['id'] }}">{{ $f['razon'] }} - {{ $f['ruc'] }}</option>
@@ -366,11 +377,13 @@
                 </div>
                 <div>
                     <x-input-label :value="__('Desde el Periodo')" />
-                    <input type="month" id="search_fecha_desde" class="cursor-pointer mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                    <input type="month" id="search_fecha_desde"
+                        class="cursor-pointer mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
                 </div>
                 <div>
                     <x-input-label :value="__('Hasta el periodo')" />
-                    <input type="month" id="search_fecha_hasta" class="cursor-pointer mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                    <input type="month" id="search_fecha_hasta"
+                        class="cursor-pointer mt-1 block w-full border-gray-300 rounded-md shadow-sm text-sm">
                 </div>
                 <div>
                     <x-input-label :value="__('Estado')" />
@@ -383,22 +396,47 @@
             </div>
 
             <!-- Contenedor de Resultados -->
-            <div class="overflow-x-auto max-h-[400px] border border-gray-200 rounded-lg hidden" id="wrapper_search_results">
+            <div class="overflow-x-auto max-h-[400px] border border-gray-200 rounded-lg hidden"
+                id="wrapper_search_results">
                 <table class="min-w-full divide-y divide-gray-200 text-sm" id="table_search_results">
                     <thead class="bg-gray-100 sticky top-0">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Empresa</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">RUC</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Tributo</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Período</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vencimiento</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Últ. Pago</th>
-                            <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Plazo</th>
-                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Monto</th>
-                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Int. Pend.</th>
-                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Total/Saldo</th>
-                            <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Estado</th>
-                            <th class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Acción</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Empresa</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                RUC</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Tributo</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Período</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Vencimiento</th>
+                            <th
+                                class="px-4 py-2 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Últ. Pago</th>
+                            <th
+                                class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Plazo</th>
+                            <th
+                                class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Monto</th>
+                            <th
+                                class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Int. Pend.</th>
+                            <th
+                                class="px-4 py-2 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Total/Saldo</th>
+                            <th
+                                class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Estado</th>
+                            <th
+                                class="px-4 py-2 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                Acción</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" id="tbody_search_results">
@@ -449,7 +487,9 @@
 
                 container.addClass('hidden');
                 tbody.empty();
-                messageDiv.removeClass('hidden').html('<p class="flex items-center justify-center gap-2"><i class="bi bi-arrow-repeat animate-spin text-lg text-blue-600"></i> Buscando deudas de {{ $tipo === "recursos" ? "recursos" : "contabilidad" }}...</p>');
+                messageDiv.removeClass('hidden').html(
+                    '<p class="flex items-center justify-center gap-2"><i class="bi bi-arrow-repeat animate-spin text-lg text-blue-600"></i> Buscando deudas de {{ $tipo === 'recursos' ? 'recursos' : 'contabilidad' }}...</p>'
+                );
 
                 buscarDeudasAjax = $.ajax({
                     url: "{{ route('deudas.buscar_ajax', ['tipo' => $tipo]) }}",
@@ -463,7 +503,8 @@
                     success: function(res) {
                         messageDiv.addClass('hidden');
                         if (!res.success || res.rows.length === 0) {
-                            messageDiv.removeClass('hidden').text('No se encontraron deudas con los filtros seleccionados.');
+                            messageDiv.removeClass('hidden').text(
+                                'No se encontraron deudas con los filtros seleccionados.');
                             return;
                         }
 
@@ -537,8 +578,10 @@
                                 className: 'bg-green-800 hover:bg-green-900 text-white px-4 py-2 rounded-md transition duration-300 shadow-md font-semibold mb-3 border-0',
                                 title: function() {
                                     const hoy = new Date();
-                                    const dia = hoy.getDate().toString().padStart(2, '0');
-                                    const mes = (hoy.getMonth() + 1).toString().padStart(2, '0');
+                                    const dia = hoy.getDate().toString().padStart(2,
+                                        '0');
+                                    const mes = (hoy.getMonth() + 1).toString()
+                                        .padStart(2, '0');
                                     const anio = hoy.getFullYear();
                                     return `BUSQUEDA_DEUDAS_{{ strtoupper($tipo) }}_${dia}_${mes}_${anio}`;
                                 },
@@ -548,17 +591,23 @@
                                         body: function(data, row, column, node) {
                                             if (typeof data === 'string') {
                                                 // Primero, remover cualquier etiqueta HTML (ej: para spans de Plazo y Estado)
-                                                let text = data.replace(/<[^>]*>?/gm, '').trim();
+                                                let text = data.replace(
+                                                    /<[^>]*>?/gm, '').trim();
 
                                                 // Decodificar entidades HTML como &amp; -> &
-                                                let txt = document.createElement('textarea');
+                                                let txt = document.createElement(
+                                                    'textarea');
                                                 txt.innerHTML = text;
                                                 text = txt.value;
-                                                
+
                                                 // Si es un monto monetario, remover S/. y comas para dejarlo numérico
                                                 if (text.includes('S/.')) {
-                                                    let clean = text.replace(/S\/\.\s?/g, '').replace(/,/g, '').trim();
-                                                    return isNaN(clean) || clean === '' ? text : parseFloat(clean);
+                                                    let clean = text.replace(
+                                                            /S\/\.\s?/g, '')
+                                                        .replace(/,/g, '').trim();
+                                                    return isNaN(clean) || clean ===
+                                                        '' ? text : parseFloat(
+                                                            clean);
                                                 }
                                                 return text;
                                             }
@@ -578,15 +627,17 @@
                         if (textStatus === 'abort') {
                             return; // Ignorar si fue cancelado intencionalmente
                         }
-                        messageDiv.removeClass('hidden').text('Ocurrió un error al realizar la búsqueda.');
+                        messageDiv.removeClass('hidden').text(
+                            'Ocurrió un error al realizar la búsqueda.');
                     }
                 });
             }
 
             // Escuchar cualquier cambio en los filtros para recargar automáticamente
-            $('#search_id_empresa, #search_fecha_desde, #search_fecha_hasta, #search_estado').on('change', function() {
-                ejecutarBusquedaDeudas();
-            });
+            $('#search_id_empresa, #search_fecha_desde, #search_fecha_hasta, #search_estado').on('change',
+                function() {
+                    ejecutarBusquedaDeudas();
+                });
 
             // Cargar datos inicialmente al abrir el modal o cargar la página
             ejecutarBusquedaDeudas();

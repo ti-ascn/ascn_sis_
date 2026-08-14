@@ -7,10 +7,11 @@
     } else {
         document.documentElement.classList.remove('dark')
     }
+
 </script>
 
 @php
-    $isAuditoria = Auth::check() && Auth::user()->area && Auth::user()->area->nombre === 'AUDITORIA';
+$isAuditoria = Auth::check() && Auth::user()->area && Auth::user()->area->nombre === 'AUDITORIA';
 @endphp
 
 <head>
@@ -19,8 +20,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <link rel="icon" type="image/x-icon"
-        href="{{ $isAuditoria ? asset('img/sistema-ico.ico') : asset('img/asecon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ $isAuditoria ? asset('img/sistema-ico.ico') : asset('img/asecon.ico') }}">
 
     <title>{{ $isAuditoria ? 'SISTEMA' : config('app.name') }}</title>
 
@@ -487,6 +487,11 @@
             border-color: #374151 !important;
         }
 
+        .dark .bg-emerald-100 {
+            background-color: #a7f3d0 !important;
+            color: #065f46 !important;
+        }
+
         .dark input::placeholder,
         .dark textarea::placeholder {
             color: #9ca3af !important;
@@ -657,75 +662,81 @@
         .dark .shadow-sm.rounded-lg {
             background-color: #2a2d35;
         }
-        
+
         /* ── Preservar colores de badges en modo oscuro ── */
         .dark .bg-purple-100.text-purple-700,
         .dark .bg-purple-100 {
             background-color: #e9d5ff !important;
             color: #7e22ce !important;
         }
-        
+
         .dark .bg-green-100.text-green-700,
         .dark .bg-green-100 {
             background-color: #dcfce7 !important;
             color: #15803d !important;
         }
-        
+
         .dark .bg-blue-100.text-blue-700,
         .dark .bg-blue-100 {
             background-color: #dbeafe !important;
             color: #1d4ed8 !important;
         }
-        
+
         .dark .bg-yellow-100.text-yellow-700,
         .dark .bg-yellow-100 {
             background-color: #fef3c7 !important;
             color: #a16207 !important;
         }
-        
+
         .dark .bg-red-100.text-red-700,
         .dark .bg-red-100 {
             background-color: #fee2e2 !important;
             color: #b91c1c !important;
         }
-        
+
+        .dark .bg-emerald-100.text-emerald-700,
+        .dark .bg-emerald-100 {
+            background-color: #d1fae5 !important;
+            color: #047857 !important;
+        }
+
         .dark .bg-indigo-100.text-indigo-700,
         .dark .bg-indigo-100 {
             background-color: #e0e7ff !important;
             color: #4338ca !important;
         }
-        
+
         .dark .bg-orange-100.text-orange-700,
         .dark .bg-orange-100 {
             background-color: #ffedd5 !important;
             color: #c2410c !important;
         }
-        
+
         .dark .bg-pink-100.text-pink-700,
         .dark .bg-pink-100 {
             background-color: #fce7f3 !important;
             color: #be185d !important;
         }
-        
+
         .dark .bg-teal-100.text-teal-700,
         .dark .bg-teal-100 {
             background-color: #ccfbf1 !important;
             color: #0f766e !important;
         }
-        
+
         /* Preservar bordes de badges */
         .dark .border-purple-200 {
             border-color: #d8b4fe !important;
         }
-        
+
         .dark .border-green-200 {
             border-color: #bbf7d0 !important;
         }
-        
+
         .dark .border-blue-200 {
             border-color: #bfdbfe !important;
         }
-        
+
         .dark .border-yellow-200 {
             border-color: #fde68a !important;
         }
@@ -733,6 +744,7 @@
         .sidebar-transition {
             transition: width 0.3s ease-in-out, transform 0.3s ease-in-out, visibility 0.3s ease-in-out, border-color 0.3s ease-in-out;
         }
+
     </style>
 </head>
 
@@ -751,13 +763,10 @@
                 }
             });
         }
-    }"
-        @resize.window="isMobile = window.innerWidth < 1024; if(!isMobile) sidebarOpen = (localStorage.getItem('sidebar-open') !== null ? localStorage.getItem('sidebar-open') === 'true' : true)" x-cloak>
+    }" @resize.window="isMobile = window.innerWidth < 1024; if(!isMobile) sidebarOpen = (localStorage.getItem('sidebar-open') !== null ? localStorage.getItem('sidebar-open') === 'true' : true)" x-cloak>
 
         <!-- Sidebar Navigation -->
-     <div x-cloak
-            class="sidebar-transition fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 lg:relative shrink-0 shadow-xl lg:shadow-none overflow-hidden"
-            :class="{
+        <div x-cloak class="sidebar-transition fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 lg:relative shrink-0 shadow-xl lg:shadow-none overflow-hidden" :class="{
                 'w-72 translate-x-0 visible lg:transform-none': sidebarOpen,
                 'w-0 -translate-x-full border-r-0 lg:translate-x-0 invisible lg:visible lg:transform-none': !sidebarOpen && !isMobile,
                 'w-72 -translate-x-full invisible': !sidebarOpen && isMobile
@@ -768,74 +777,59 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
             <!-- Fixed Light Header -->
-            <header
-                class="min-h-[64px] lg:min-h-[80px] py-2 shrink-0 flex items-center justify-between px-3 lg:px-6 bg-white dark:bg-[#22242a] border-b border-gray-200 dark:border-gray-800 z-30">
+            <header class="min-h-[64px] lg:min-h-[80px] py-2 shrink-0 flex items-center justify-between px-3 lg:px-6 bg-white dark:bg-[#22242a] border-b border-gray-200 dark:border-gray-800 z-30">
                 <div class="flex-1 flex items-center gap-2 lg:gap-4 min-w-0">
-                    <button @click="sidebarOpen = !sidebarOpen"
-                        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors shrink-0">
+                    <button @click="sidebarOpen = !sidebarOpen" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors shrink-0">
                         <i class="bi bi-list text-2xl"></i>
                     </button>
 
                     <div class="flex-1 flex items-center gap-1.5 lg:gap-3 min-w-0">
                         @if (!request()->routeIs('dashboard'))
-                            <button onclick="window.history.back()"
-                                class="flex items-center justify-center w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-amber-50 dark:hover:bg-amber-900/40 hover:text-amber-600 dark:hover:text-amber-500 transition-all border border-gray-100 dark:border-gray-700 shadow-sm shrink-0"
-                                title="Volver atrás">
-                                <i class="bi bi-arrow-left text-base lg:text-lg"></i>
-                            </button>
+                        <button onclick="window.history.back()" class="flex items-center justify-center w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:bg-amber-50 dark:hover:bg-amber-900/40 hover:text-amber-600 dark:hover:text-amber-500 transition-all border border-gray-100 dark:border-gray-700 shadow-sm shrink-0" title="Volver atrás">
+                            <i class="bi bi-arrow-left text-base lg:text-lg"></i>
+                        </button>
                         @endif
 
                         <div class="flex flex-col min-w-0">
-                            <div
-                                class="text-xs lg:text-base font-black text-gray-800 dark:text-gray-100 leading-tight uppercase tracking-tight">
+                            <div class="text-xs lg:text-base font-black text-gray-800 dark:text-gray-100 leading-tight uppercase tracking-tight">
                                 @isset($header)
-                                    {{ $header }}
+                                {{ $header }}
                                 @else
-                                    Panel Principal
+                                Panel Principal
                                 @endisset
                             </div>
 
                             <!-- Enhanced Breadcrumbs (Visual Only) -->
-                            <nav class="flex text-[8px] lg:text-[10px] mt-0.5 items-center gap-1 lg:gap-2 overflow-hidden"
-                                aria-label="Breadcrumb">
-                                <span
-                                    class="flex items-center text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider shrink-0">
+                            <nav class="flex text-[8px] lg:text-[10px] mt-0.5 items-center gap-1 lg:gap-2 overflow-hidden" aria-label="Breadcrumb">
+                                <span class="flex items-center text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider shrink-0">
                                     <i class="bi bi-house-door-fill mr-0.5 lg:mr-1 text-[9px] lg:text-[11px]"></i>
                                     Inicio
                                 </span>
 
                                 @php
-                                    $routeName = request()->route()->getName();
-                                    $segments = explode('.', $routeName);
-                                    $filteredSegments = array_filter($segments, function ($s) {
-                                        return !in_array($s, ['index', 'dashboard', 'all', 'panel']);
-                                    });
+                                $routeName = request()->route()->getName();
+                                $segments = explode('.', $routeName);
+                                $filteredSegments = array_filter($segments, function ($s) {
+                                return !in_array($s, ['index', 'dashboard', 'all', 'panel']);
+                                });
                                 @endphp
 
                                 @foreach ($filteredSegments as $segment)
-                                    <span class="text-gray-300 dark:text-gray-500 shrink-0"><i
-                                            class="bi bi-chevron-right"></i></span>
-                                    <span
-                                        class="text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider truncate">
-                                        {{ str_replace(['_', '-'], ' ', $segment) }}
-                                    </span>
+                                <span class="text-gray-300 dark:text-gray-500 shrink-0"><i class="bi bi-chevron-right"></i></span>
+                                <span class="text-gray-400 dark:text-gray-400 font-bold uppercase tracking-wider truncate">
+                                    {{ str_replace(['_', '-'], ' ', $segment) }}
+                                </span>
                                 @endforeach
 
                                 @if (str_contains($routeName, 'create'))
-                                    <span class="text-gray-300 dark:text-gray-600 shrink-0"><i
-                                            class="bi bi-chevron-right"></i></span>
-                                    <span
-                                        class="px-1 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500 rounded-md font-black uppercase tracking-widest text-[7px] lg:text-[9px] shrink-0">Crear</span>
+                                <span class="text-gray-300 dark:text-gray-600 shrink-0"><i class="bi bi-chevron-right"></i></span>
+                                <span class="px-1 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-500 rounded-md font-black uppercase tracking-widest text-[7px] lg:text-[9px] shrink-0">Crear</span>
                                 @elseif(str_contains($routeName, 'edit'))
-                                    <span class="text-gray-300 dark:text-gray-600 shrink-0"><i
-                                            class="bi bi-chevron-right"></i></span>
-                                    <span
-                                        class="px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 rounded-md font-black uppercase tracking-widest text-[7px] lg:text-[9px] shrink-0">Editar</span>
+                                <span class="text-gray-300 dark:text-gray-600 shrink-0"><i class="bi bi-chevron-right"></i></span>
+                                <span class="px-1 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-500 rounded-md font-black uppercase tracking-widest text-[7px] lg:text-[9px] shrink-0">Editar</span>
                                 @elseif(str_contains($routeName, 'show'))
-                                    <span class="text-gray-300 dark:text-gray-600 shrink-0"><i
-                                            class="bi bi-chevron-right"></i></span>
-                                    <span
-                                        class="px-1.5 lg:px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-500 rounded-md font-black uppercase tracking-widest text-[8px] lg:text-[9px] shrink-0">Detalles</span>
+                                <span class="text-gray-300 dark:text-gray-600 shrink-0"><i class="bi bi-chevron-right"></i></span>
+                                <span class="px-1.5 lg:px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-500 rounded-md font-black uppercase tracking-widest text-[8px] lg:text-[9px] shrink-0">Detalles</span>
                                 @endif
                             </nav>
                         </div>
@@ -846,14 +840,11 @@
                     <!-- User Profile -->
                     <div class="flex items-center gap-2 lg:gap-3 pl-2 lg:pl-4 border-l border-gray-100">
                         <div class="hidden md:flex flex-col items-end">
-                            <span
-                                class="text-xs lg:text-sm font-bold text-gray-800 leading-none">{{ Auth::user()->name }}</span>
-                            <span
-                                class="text-[9px] lg:text-[10px] text-amber-600 font-bold uppercase tracking-widest mt-1">{{ Auth::user()->area->nombre }}</span>
+                            <span class="text-xs lg:text-sm font-bold text-gray-800 leading-none">{{ Auth::user()->name }}</span>
+                            <span class="text-[9px] lg:text-[10px] text-amber-600 font-bold uppercase tracking-widest mt-1">{{ Auth::user()->area->nombre }}</span>
                         </div>
                         <a href="{{ route('profile.edit') }}">
-                            <div
-                                class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black shadow-lg shadow-amber-200/50 dark:shadow-amber-900/20 shrink-0">
+                            <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-black shadow-lg shadow-amber-200/50 dark:shadow-amber-900/20 shrink-0">
                                 {{ substr(Auth::user()->name, 0, 1) }}
                             </div>
                         </a>
@@ -870,8 +861,7 @@
         </div>
 
         <!-- Mobile Overlay Backdrop -->
-        <div x-show="isMobile && sidebarOpen" x-transition:opacity
-            class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" @click="sidebarOpen = false" style="display: none;">
+        <div x-show="isMobile && sidebarOpen" x-transition:opacity class="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" @click="sidebarOpen = false" style="display: none;">
         </div>
     </div>
     <!-- Scripts -->
@@ -904,8 +894,8 @@
                     let value = input.value.replace(/,/g, '');
                     if (!isNaN(value) && value !== '') {
                         input.value = Number(value).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
+                            minimumFractionDigits: 2
+                            , maximumFractionDigits: 2
                         });
                     }
                 });
@@ -917,12 +907,13 @@
                 let value = element.textContent.trim();
                 if (!isNaN(value) && value !== '') {
                     element.textContent = Number(value).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
+                        minimumFractionDigits: 2
+                        , maximumFractionDigits: 2
                     });
                 }
             });
         });
+
     </script>
     <script>
         $(document).ready(function() {
@@ -966,6 +957,7 @@
                 }
             });
         });
+
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1049,6 +1041,7 @@
             setupFlashMessage(document.getElementById('success-message'), 5000);
             setupFlashMessage(document.getElementById('error-message'), 5000);
         });
+
     </script>
     {{-- BLOQUEAR BOTON --}}
     <script src="{{ asset('/js/blockForm.js') }}"></script>
@@ -1056,6 +1049,7 @@
         window.addEventListener("load", function() {
             document.getElementById("loader").style.display = "none";
         });
+
     </script>
     <script>
         document.addEventListener('keydown', function(e) {
@@ -1083,12 +1077,11 @@
                     const $mirror = $wrapper.find('.dt-double-scroll-wrapper');
                     $mirror.addClass('sticky-active');
                     $wrapper.find('.dataTables_filter, .dt-buttons, .dt-layout-row:first-child').css({
-                        'position': 'sticky',
-                        'top': navHeight + 'px',
-                        'z-index': 35,
-                        'background': document.documentElement.classList.contains('dark') ? '#22242a' :
-                            'white',
-                        'padding': '10px 0'
+                        'position': 'sticky'
+                        , 'top': navHeight + 'px'
+                        , 'z-index': 35
+                        , 'background': document.documentElement.classList.contains('dark') ? '#22242a' : 'white'
+                        , 'padding': '10px 0'
                     });
                     $wrapper.find('thead th').css('top', (navHeight + 50) + 'px');
                     return;
@@ -1118,11 +1111,11 @@
                 // 2. Sticky Header Logic
                 const $filters = $wrapper.find('.dataTables_filter, .dt-buttons, .dt-layout-row:first-child');
                 $filters.css({
-                    'position': 'sticky',
-                    'top': navHeight + 'px',
-                    'z-index': 35,
-                    'background': document.documentElement.classList.contains('dark') ? '#22242a' : 'white',
-                    'padding': '10px 0'
+                    'position': 'sticky'
+                    , 'top': navHeight + 'px'
+                    , 'z-index': 35
+                    , 'background': document.documentElement.classList.contains('dark') ? '#22242a' : 'white'
+                    , 'padding': '10px 0'
                 });
 
                 $wrapper.find('thead th').css('top', (navHeight + 50) + 'px');
@@ -1144,6 +1137,7 @@
 
         // Periodic check for dynamic content
         setInterval(applyDataTableUX, 2000);
+
     </script>
     <x-ajax-toast />
 </body>

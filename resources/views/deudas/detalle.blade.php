@@ -85,81 +85,130 @@
                     Mes siguiente ›
                 </a>
 
-                <a href="{{ route('determinacion_mensual.show', $determinacion->id_determinacion_mensual ?? 0) }}"
-                    class="flex items-center gap-2 bg-green-800 px-4 py-2 rounded-md hover:bg-green-900 transition text-white">
-                    <i class="bi bi-newspaper"></i> Determinación Mensual
-                </a>
+                @if ($tipo === 'contabilidad')
+                    <a href="{{ route('determinacion_mensual.show', $determinacion->id_determinacion_mensual ?? 0) }}"
+                        class="flex items-center gap-2 bg-green-800 px-4 py-2 rounded-md hover:bg-green-900 transition text-white">
+                        <i class="bi bi-newspaper"></i> Determinación Mensual
+                    </a>
+                @endif
 
-                {{-- DROPDOWN ARCHIVOS --}}
-                <div class="relative">
-                    <x-dropdown align="right" width="56">
-                        <x-slot name="trigger">
-                            <button
-                                class="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600 transition text-white">
-                                <i class="bi bi-folder2-open"></i>
-                                Archivos
-                                <i class="bi bi-chevron-down"></i>
-                            </button>
-                        </x-slot>
+                {{-- Archivos propios de Recursos: no se mezclan con Contabilidad. --}}
+                @if ($tipo === 'recursos')
+                    <button type="button" onclick="toggleModal('modal-subir-archivo-recursos')"
+                        class="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700 transition text-white">
+                        <i class="bi bi-upload"></i> Subir archivo
+                    </button>
 
-                        <x-slot name="content">
-                            <div class="p-2">
-                                <!-- Ver Constancia con submenú -->
-                                <div class="relative" x-data="{ abiertoConstancia: false }">
-                                    <button @mouseenter="abiertoConstancia = true"
-                                        @mouseleave="abiertoConstancia = false"
-                                        class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md flex items-center justify-between gap-2">
-                                        <span class="flex items-center gap-2">
-                                            <i class="bi bi-file-earmark-pdf text-red-500"></i>
-                                            Ver Constancia
-                                        </span>
-                                        <i class="bi bi-chevron-right text-gray-400 text-xs"></i>
-                                    </button>
+                    <div class="relative">
+                        <x-dropdown align="right" width="56">
+                            <x-slot name="trigger">
+                                <button
+                                    class="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600 transition text-white">
+                                    <i class="bi bi-folder2-open"></i> Archivos <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </x-slot>
+                            <x-slot name="content">
+                                <div class="p-2 max-h-64 overflow-y-auto">
+                                    @forelse ($archivosRecursos as $archivo)
+                                        <div
+                                            class="w-full px-3 py-2 hover:bg-gray-700 rounded-md flex items-center gap-2">
+                                            <a href="{{ asset($archivo->ruta) }}" target="_blank"
+                                                class="w-full px-3 py-2 hover:bg-gray-700 rounded-md flex items-center gap-2">
+                                                <i class="bi bi-file-earmark-pdf text-red-500"></i>
+                                                <span class="truncate">{{ $archivo->nombre_original }}</span>
+                                            </a>
+                                            <button type="button" onclick="eliminarArchivo({{ $archivo->id }})"
+                                                class="text-red-500 hover:text-red-700 ml-auto"
+                                                title="Eliminar archivo">
+                                                <i class="bi bi-x text-xl"></i>
+                                            </button>
+                                        </div>
+                                    @empty
+                                        <p class="px-3 py-2 text-sm text-gray-400 italic">No hay archivos de Recursos.
+                                        </p>
+                                    @endforelse
+                                    <form id="formEliminarArchivo" method="POST" style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                </div>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                @elseif ($tipo !== 'recursos')
+                    {{-- DROPDOWN ARCHIVOS DE CONTABILIDAD --}}
+                    <div class="relative">
+                        <x-dropdown align="right" width="56">
+                            <x-slot name="trigger">
+                                <button
+                                    class="flex items-center gap-2 bg-blue-500 px-4 py-2 rounded-md hover:bg-blue-600 transition text-white">
+                                    <i class="bi bi-folder2-open"></i>
+                                    Archivos
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </x-slot>
 
-                                    <!-- Submenú Constancia -->
-                                    <div x-show="abiertoConstancia" @mouseenter="abiertoConstancia = true"
-                                        @mouseleave="abiertoConstancia = false" x-transition
-                                        class="absolute left-full top-0 bg-white border border-gray-200 shadow-lg rounded-md min-w-max z-50 p-1">
+                            <x-slot name="content">
+                                <div class="p-2">
+                                    <!-- Ver Constancia con submenú -->
+                                    <div class="relative" x-data="{ abiertoConstancia: false }">
+                                        <button @mouseenter="abiertoConstancia = true"
+                                            @mouseleave="abiertoConstancia = false"
+                                            class="w-full text-left px-3 py-2 hover:bg-gray-100 rounded-md flex items-center justify-between gap-2">
+                                            <span class="flex items-center gap-2">
+                                                <i class="bi bi-file-earmark-pdf text-red-500"></i>
+                                                Ver Constancia
+                                            </span>
+                                            <i class="bi bi-chevron-right text-gray-400 text-xs"></i>
+                                        </button>
 
-                                        @if ($determinacion)
-                                            @if ($determinacion->archivo_pdt_constancia)
-                                                <a href="{{ asset($determinacion->archivo_pdt_constancia) }}"
-                                                    target="_blank"
-                                                    class="w-full px-3 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2">
-                                                    <i class="bi bi-file-earmark-pdf text-red-500"></i>
-                                                    Constancia Original
-                                                </a>
-                                            @endif
+                                        <!-- Submenú Constancia -->
+                                        <div x-show="abiertoConstancia" @mouseenter="abiertoConstancia = true"
+                                            @mouseleave="abiertoConstancia = false" x-transition
+                                            class="absolute left-full top-0 bg-white border border-gray-200 shadow-lg rounded-md min-w-max z-50 p-1">
 
-                                            @if ($determinacion->archivo_pdt_constancia_rectificado)
-                                                <a href="{{ asset($determinacion->archivo_pdt_constancia_rectificado) }}"
-                                                    target="_blank"
-                                                    class="w-full px-3 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2">
-                                                    <i class="bi bi-file-earmark-pdf text-red-500"></i>
-                                                    Constancia Rectificado 1
-                                                </a>
-                                            @endif
-
-                                            @for ($i = 2; $i <= 4; $i++)
-                                                @php $fieldName = "pdt_constancia_rectificatorio_{$i}"; @endphp
-                                                @if ($determinacion->$fieldName)
-                                                    <a href="{{ asset($determinacion->$fieldName) }}" target="_blank"
+                                            @if ($determinacion)
+                                                @if ($determinacion->archivo_pdt_constancia)
+                                                    <a href="{{ asset($determinacion->archivo_pdt_constancia) }}"
+                                                        target="_blank"
                                                         class="w-full px-3 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2">
                                                         <i class="bi bi-file-earmark-pdf text-red-500"></i>
-                                                        Constancia Rectificado {{ $i }}
+                                                        Constancia Original
                                                     </a>
                                                 @endif
-                                            @endfor
-                                        @else
-                                            <p class="px-3 py-2 text-sm text-gray-400 italic">Sin determinación registrada.</p>
-                                        @endif
-                                    </div>
-                                </div>
 
-                            </div>
-                        </x-slot>
-                    </x-dropdown>
-                </div>
+                                                @if ($determinacion->archivo_pdt_constancia_rectificado)
+                                                    <a href="{{ asset($determinacion->archivo_pdt_constancia_rectificado) }}"
+                                                        target="_blank"
+                                                        class="w-full px-3 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2">
+                                                        <i class="bi bi-file-earmark-pdf text-red-500"></i>
+                                                        Constancia Rectificado 1
+                                                    </a>
+                                                @endif
+
+                                                @for ($i = 2; $i <= 4; $i++)
+                                                    @php $fieldName = "pdt_constancia_rectificatorio_{$i}"; @endphp
+                                                    @if ($determinacion->$fieldName)
+                                                        <a href="{{ asset($determinacion->$fieldName) }}"
+                                                            target="_blank"
+                                                            class="w-full px-3 py-2 hover:bg-gray-100 rounded-md flex items-center gap-2">
+                                                            <i class="bi bi-file-earmark-pdf text-red-500"></i>
+                                                            Constancia Rectificado {{ $i }}
+                                                        </a>
+                                                    @endif
+                                                @endfor
+                                            @else
+                                                <p class="px-3 py-2 text-sm text-gray-400 italic">Sin determinación
+                                                    registrada.</p>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </x-slot>
+                        </x-dropdown>
+                    </div>
+                @endif
 
                 {{-- Vencimiento PDT del mes mostrado --}}
                 <div class="ml-auto flex items-center gap-3">
@@ -261,7 +310,7 @@
                                         </span>
                                     @elseif ($r['estado'] === 'Sin movimiento')
                                         <span
-                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-200 text-gray-600">
+                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-gray-500 text-gray-600">
                                             Sin movimiento
                                         </span>
                                     @endif
@@ -326,8 +375,8 @@
                                             ((Auth::user()->tipo_usuario == 1 || Auth::user()->tipo_usuario == 2) &&
                                                 Auth::user()->area->nombre != 'CONTABILIDAD') ||
                                                 now()->lessThan('2025-10-30'))
-                                            <form action="{{ route('deudas.destroy', $r['id_deuda']) }}" method="POST"
-                                                style="display:inline;"
+                                            <form action="{{ route('deudas.destroy', $r['id_deuda']) }}"
+                                                method="POST" style="display:inline;"
                                                 onsubmit="return confirm('¿Seguro que deseas eliminar esta deuda y sus pagos?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -403,6 +452,26 @@
         </div>
     </div>
 </x-app-layout>
+
+@if ($tipo === 'recursos')
+    <x-modal-show id="modal-subir-archivo-recursos" title="Subir PDF de deuda - Recursos">
+        <form method="POST"
+            action="{{ route('deudas.recursos.archivos.store', [$empresa->id_empresas_clientes, $anio, $mes]) }}"
+            enctype="multipart/form-data" class="space-y-4">
+            @csrf
+            <div>
+                <x-input-label for="archivo-recursos" :value="__('Archivo PDF')" />
+                <input id="archivo-recursos" name="archivo" type="file" accept="application/pdf" required
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" />
+            </div>
+            <div class="flex justify-end gap-3">
+                <x-secondary-button type="button"
+                    onclick="toggleModal('modal-subir-archivo-recursos')">Cancelar</x-secondary-button>
+                <x-primary-button>Subir</x-primary-button>
+            </div>
+        </form>
+    </x-modal-show>
+@endif
 
 <x-modal-show id="modal-cambiar-tributo" title="Cambiar tributo de deuda">
     <form method="POST" id="form-cambiar-tributo">
@@ -531,7 +600,8 @@
             </div>
             <div>
                 <x-input-label :value="__('Fecha de vencimiento')" />
-                <x-text-input name="fecha_vencimiento" id="pay-fecha-vcto" type="date" class="mt-1 block w-full bg-gray-200" disabled />
+                <x-text-input name="fecha_vencimiento" id="pay-fecha-vcto" type="date"
+                    class="mt-1 block w-full bg-gray-200" disabled />
             </div>
         </div>
 
@@ -664,7 +734,7 @@
 
         document.getElementById('pay-id-deuda').value = _pay.idDeuda;
         document.getElementById('pay-tributo').value = payload.tributo;
-        
+
         const payVctoInput = document.getElementById('pay-fecha-vcto');
         payVctoInput.value = _pay.fechaVcto;
         if (payload.tributo.toUpperCase().includes('RENTA ANUAL')) {
@@ -871,8 +941,8 @@
                     <x-text-input name="fecha_vencimiento" id="cd-fecha-vcto" type="date"
                         class="mt-1 block w-full"
                         value="{{ $vencimientoMes ? $vencimientoMes->format('Y-m-d') : '' }}"
-                        data-original-value="{{ $vencimientoMes ? $vencimientoMes->format('Y-m-d') : '' }}"
-                        readonly required />
+                        data-original-value="{{ $vencimientoMes ? $vencimientoMes->format('Y-m-d') : '' }}" readonly
+                        required />
                     <small class="text-gray-500">El interés corre desde el día siguiente al vencimiento.</small>
                 </div>
             </div>
@@ -941,4 +1011,17 @@
             });
         }
     });
+</script>
+<script>
+    function eliminarArchivo(id) {
+
+        if (!confirm('¿Estás seguro de eliminar este archivo?')) {
+            return;
+        }
+
+        const form = document.getElementById('formEliminarArchivo');
+
+        form.action = '/archivos/' + id;
+        form.submit();
+    }
 </script>

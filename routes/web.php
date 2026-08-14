@@ -580,6 +580,8 @@ Route::middleware(['auth', 'user.active'])->group(function () {
         Route::get('/deudas/{tipo}', [DeudaController::class, 'index'])
             ->name('deudas.index');
         Route::post('/deudas', [DeudaController::class, 'store'])->name('deudas.store');
+        Route::post('/deudas-recursos/{empresa}/{anio}/{mes}/archivos', [DeudaController::class, 'subirArchivoRecursos'])
+            ->name('deudas.recursos.archivos.store');
         Route::get('/deudas/{tipo}/{empresa}/{anio}/{mes}', [DeudaController::class, 'detalle'])
             ->name('deudas.detalle');
         Route::post('/pago-deudas', [PagoDeudaController::class, 'store'])->name('pago_deudas.store');
@@ -592,6 +594,8 @@ Route::middleware(['auth', 'user.active'])->group(function () {
             ->name('deudas.updateTributo');
         Route::get('/deudas-{tipo}/buscar-ajax', [DeudaController::class, 'buscarDeudasAjax'])
             ->name('deudas.buscar_ajax');
+        Route::delete('/archivos/{id}', [DeudaController::class, 'eliminarArchivo'])
+            ->name('archivos.eliminar');
     });
 
     Route::middleware(['auth', 'user.active'])->group(function () {

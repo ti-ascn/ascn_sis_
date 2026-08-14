@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Deuda;
+use App\Models\ArchivoDeudaRecurso;
 use App\Models\EmpresasClientes;
 use App\Models\PagoDeuda;
 use App\Models\Tributo;
@@ -10,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\DeudasExport;
+use Illuminate\Support\Facades\File;
+use Smalot\PdfParser\Parser;
 
 class DeudaController extends Controller
 {
@@ -133,9 +137,9 @@ class DeudaController extends Controller
 
             $fila['vencimiento_pdt'] = $dia
                 ? Carbon::createFromDate(now()->year, now()->month, 1)
-                    ->addMonth()
-                    ->setDay((int) $dia)
-                    ->format('Y-m-d')
+                ->addMonth()
+                ->setDay((int) $dia)
+                ->format('Y-m-d')
                 : null;
 
             for ($m = 1; $m <= 12; $m++) {
@@ -226,6 +230,141 @@ class DeudaController extends Controller
         return back()->with('success', 'Deuda creada correctamente.');
     }
 
+    public function subirArchivoRecursos(Request $request, $empresaId, $anio, $mes)
+    {
+        $request->validate([
+            'archivo' => 'required|file|extensions:pdf|max:10240',
+        ]);
+
+        $empresa = EmpresasClientes::findOrFail($empresaId);
+        $periodo = Carbon::createFromDate((int) $anio, (int) $mes, 1)->startOfMonth();
+        $archivo = $request->file('archivo');
+        $nombreOriginal = $archivo->getClientOriginalName();
+        $razon_social_limpia = preg_replace('/[^A-Za-z0-9_-]/', '_', $empresa->razon_social);
+        $nombre = 'CONSTANCIA_DEUDA_RECURSOS_' . $razon_social_limpia . '_' . date('d-m-Y') . '.pdf';
+        $directorio = public_path("deudas_recursos/{$empresa->id_empresas_clientes}/{$periodo->format('Y-m')}");
+
+        File::ensureDirectoryExists($directorio);
+        $archivo->move($directorio, $nombre);
+        $ruta = "deudas_recursos/{$empresa->id_empresas_clientes}/{$periodo->format('Y-m')}/{$nombre}";
+
+        $archivoRecurso = ArchivoDeudaRecurso::create([
+            'id_empresa_cliente' => $empresa->id_empresas_clientes,
+            'id_usuario' => auth()->id(),
+            'periodo' => $periodo->toDateString(),
+            'nombre_original' => $nombreOriginal,
+            'ruta' => $ruta,
+        ]);
+
+        $registradas = $this->sincronizarDeudasRecursosDesdePdf($empresa, $periodo, public_path($ruta), $archivoRecurso->id);
+
+        return back()->with('success', "Archivo de Recursos cargado. Se extrajeron {$registradas} deuda(s).");
+    }
+
+    private function sincronizarDeudasRecursosDesdePdf(EmpresasClientes $empresa, Carbon $periodo, string $rutaPdf, int $archivoId): int
+    {
+        $datos = $this->extraerDatosConstancia($rutaPdf);
+        if (empty($datos)) {
+            return 0;
+        }
+
+        $calendario = \App\Models\CalendarioVencimiento::where('tipo', 'PDT')
+            ->where('mes', $periodo->format('Y-m'))->where('estado', 1)->first();
+        $fechas = $calendario ? json_decode($calendario->fechas, true) : [];
+        $dia = $fechas[substr($empresa->ruc, -1)] ?? 15;
+        $vencimiento = $periodo->copy()->addMonth()->setDay((int) $dia)->toDateString();
+        $registradas = 0;
+
+        foreach ($datos as $dato) {
+            $tributo = Tributo::where('codigo', $dato['codigo'])->where('tipo', 'recursos')->first();
+            if (!$tributo) {
+                continue;
+            }
+
+            $deuda = Deuda::firstOrNew([
+                'id_empresa_cliente' => $empresa->id_empresas_clientes,
+                'id_tributo' => $tributo->id_tributo,
+                'fecha_vencimiento' => $vencimiento,
+            ]);
+            $esNueva = !$deuda->exists;
+
+            // Una nueva carga del mismo tributo reemplaza su importe. Si ya tiene
+            $deuda->fill([
+                'id_usuario' => auth()->id(),
+                'monto_deuda' => (int) round($dato['monto']),
+                'observaciones' => "Extraído de PDF de Recursos",
+            ]);
+
+            if ($esNueva || !$deuda->pagos()->exists()) {
+                $deuda->fill([
+                    'estado' => $dato['monto'] <= 0 ? 2 : 0,
+                    'pago_puntual' => $dato['monto'] <= 0 ? 1 : 0,
+                ]);
+            }
+
+            if ($esNueva) {
+                $deuda->fill([
+                    'interes_pendiente' => 0,
+                    'interes_calculado' => 0,
+                ]);
+            }
+
+            $deuda->save();
+            $registradas++;
+        }
+        return $registradas;
+    }
+
+    private function extraerDatosConstancia(string $rutaPdf): array
+    {
+        try {
+            $texto = (new Parser())->parseFile($rutaPdf)->getText();
+            $texto = preg_replace_callback('/(?<!\d)(\d)\s+(\d)\s+(\d)\s+(\d)(?!\d)/', fn($m) => $m[1] . $m[2] . $m[3] . $m[4], $texto);
+            $resultados = [];
+
+            $agregar = function (string $codigo, string $monto) use (&$resultados): void {
+                $resultados[$codigo] = (float) str_replace(',', '', $monto);
+            };
+
+            $patronCodigoInicial = '/\b(\d{4})\b\s*(?:-\s+)?[A-ZÁÉÍÓÚÑ][^\n]*?S\/\.?\s*([\d,]+(?:\.\d{2})?)/u';
+            if (preg_match_all($patronCodigoInicial, $texto, $coincidencias, PREG_SET_ORDER)) {
+                foreach ($coincidencias as $coincidencia) {
+                    $agregar($coincidencia[1], $coincidencia[2]);
+                }
+            }
+
+            $patronDj601 = '/(?:^|\R)[^\r\n]*?S\/\.?\s*([\d,]+(?:\.\d{2})?)\s*S\/\.?\s*([\d,]+(?:\.\d{2})?)\s*(\d{4})\b/u';
+            if (preg_match_all($patronDj601, $texto, $coincidencias, PREG_SET_ORDER)) {
+                foreach ($coincidencias as $coincidencia) {
+                    $monto = max((float) str_replace(',', '', $coincidencia[1]), (float) str_replace(',', '', $coincidencia[2]));
+                    $agregar($coincidencia[3], (string) $monto);
+                }
+            }
+
+            $patronDeudaDj601 = '/\b\d{6}\b\s+(\d{4})\b[^\n]*?S\/\.?\s*([\d,]+(?:\.\d{2})?)/u';
+            if (preg_match_all($patronDeudaDj601, $texto, $coincidencias, PREG_SET_ORDER)) {
+                foreach ($coincidencias as $coincidencia) {
+                    $agregar($coincidencia[1], $coincidencia[2]);
+                }
+            }
+
+            return collect($resultados)->map(fn($monto, $codigo) => compact('codigo', 'monto'))->values()->all();
+        } catch (\Throwable $e) {
+            report($e);
+            return [];
+        }
+    }
+
+    public function eliminarArchivo($id)
+    {
+        $archivo = ArchivoDeudaRecurso::findOrFail($id);
+        $ruta = public_path($archivo->ruta);
+        if (File::exists($ruta)) {
+            File::delete($ruta);
+        }
+        $archivo->delete();
+        return redirect()->back()->with('success', 'Archivo eliminado correctamente.');
+    }
 
     public function detalle(Request $request, $tipo, $empresaId, $anio, $mes)
     {
@@ -244,9 +383,9 @@ class DeudaController extends Controller
             ->where('estado', 1)
             ->first()
             ?? \App\Models\CalendarioVencimiento::where('tipo', 'PDT')
-                ->where('estado', 1)
-                ->orderBy('mes', 'desc')
-                ->first();
+            ->where('estado', 1)
+            ->orderBy('mes', 'desc')
+            ->first();
 
         $fechas = $calPDT ? json_decode($calPDT->fechas, true) : [];
         $ud = substr($empresa->ruc, -1);
@@ -255,8 +394,8 @@ class DeudaController extends Controller
         // El vencimiento PDT es para el mes SIGUIENTE al periodo
         $vencimientoMes = $dia
             ? Carbon::createFromDate((int) $anio, (int) $mes, 1)
-                ->addMonth() // ← Vencimiento del mes siguiente
-                ->setDay((int) $dia)
+            ->addMonth() // ← Vencimiento del mes siguiente
+            ->setDay((int) $dia)
             : null;
 
         // Tipos de tributos
@@ -376,6 +515,11 @@ class DeudaController extends Controller
             ->whereMonth('fecha', (int) $mes)
             ->first();
 
+        $archivosRecursos = ArchivoDeudaRecurso::where('id_empresa_cliente', $empresaId)
+            ->where('periodo', Carbon::createFromDate((int) $anio, (int) $mes, 1)->toDateString())
+            ->latest()
+            ->get();
+
         return view('deudas.detalle', [
             'empresa' => $empresa,
             'anio' => (int) $anio,
@@ -393,6 +537,7 @@ class DeudaController extends Controller
                 'interes_pendiente' => $totInteresPendiente,
             ],
             'determinacion' => $determinacion,
+            'archivosRecursos' => $archivosRecursos,
         ]);
     }
 
@@ -476,9 +621,9 @@ class DeudaController extends Controller
 
         $vencimientoMes = $dia
             ? Carbon::createFromDate((int) $anio, (int) $mes, 1)
-                ->addMonth()
-                ->setDay((int) $dia)
-                ->format('d/m/Y')
+            ->addMonth()
+            ->setDay((int) $dia)
+            ->format('d/m/Y')
             : '—';
 
 
