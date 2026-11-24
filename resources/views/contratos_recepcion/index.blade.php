@@ -182,6 +182,22 @@
                                                     </svg>
                                                     <span class="tooltip-text">Eliminar</span>
                                                 </a>
+                                                {{-- Crear Contrato siempre visible --}}
+                                                <a role="button"
+                                                    class="flex items-center rounded-md tooltip btn-crear-contrato"
+                                                    style="color: #28a745;" onmouseover="this.style.color='#34d058';"
+                                                    onmouseout="this.style.color='#28a745';"
+                                                    data-cotizacion="{{ $cotizacion->id_cotizacion }}"
+                                                    data-empresa="{{ $cotizacion->empresaCliente->razon_social ?? '' }}"
+                                                    data-ruc="{{ $cotizacion->empresaCliente->ruc ?? '' }}">
+                                                    <svg style="width:20px;height:20px;" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                                                    </svg>
+                                                    <span class="tooltip-text">Crear Contrato</span>
+                                                </a>
                                             @endif
                                         @else
                                             @if (Auth::user()->area->nombre != 'LEGAL')
@@ -897,7 +913,7 @@
                     }
 
                     if (!id) {
-                        // Creación nueva: reemplazar botón "crear" por los tres botones de acción
+                        // Creación nueva: agregar botones Editar, Historial, Eliminar y mantener Crear Contrato( para los flojos que no quieen entrar )
                         fila.find(`.acciones-cell-${cotizacionId}`).html(`
                         <a role="button" class="flex items-center rounded-md tooltip btn-editar-contrato"
                             style="color:#e6a817;" onmouseover="this.style.color='#f5bc42';" onmouseout="this.style.color='#e6a817';"
@@ -919,6 +935,12 @@
                             data-id="${idContrato}" data-cotizacion="${cotizacionId}">
                             <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
                             <span class="tooltip-text">Eliminar</span>
+                        </a>
+                        <a role="button" class="flex items-center rounded-md tooltip btn-crear-contrato"
+                            style="color:#28a745;" onmouseover="this.style.color='#34d058';" onmouseout="this.style.color='#28a745';"
+                            data-cotizacion="${cotizacionId}" data-empresa="${empresa}" data-ruc="${ruc}">
+                            <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+                            <span class="tooltip-text">Crear Contrato</span>
                         </a>`);
                     } else {
                         // Edición: actualizar data-attributes del botón editar
